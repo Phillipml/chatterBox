@@ -49,7 +49,6 @@ def _to_out(doc: dict) -> MessageOut:
 
 
 def _to_llm_messages(docs: list[dict]) -> list[dict]:
-    """Mongo role 'ai' → OpenAI/Groq role 'assistant'."""
     mapped = []
     for doc in docs:
         role = "assistant" if doc["role"] == "ai" else "user"
@@ -69,7 +68,6 @@ async def create_message(conversation_id: str, body: MessageCreate):
     oid = await _get_conversation_or_404(conversation_id)
     now = datetime.now(timezone.utc)
 
-    # 1) salva user
     user_doc = {
         "conversation_id": oid,
         "role": "user",
@@ -79,7 +77,6 @@ async def create_message(conversation_id: str, body: MessageCreate):
     user_result = await _messages().insert_one(user_doc)
     user_doc["_id"] = user_result.inserted_id
 
-    # 2) contexto (últimas N, ordem cronológica)
     limit = settings.llm_context_limit
     history = (
         await _messages()
@@ -90,10 +87,8 @@ async def create_message(conversation_id: str, body: MessageCreate):
     )
     history.reverse()
 
-    # 3) Groq
     ai_text = await llm.chat(_to_llm_messages(history))
 
-    # 4) salva ai
     ai_now = datetime.now(timezone.utc)
     ai_doc = {
         "conversation_id": oid,
@@ -104,11 +99,9 @@ async def create_message(conversation_id: str, body: MessageCreate):
     ai_result = await _messages().insert_one(ai_doc)
     ai_doc["_id"] = ai_result.inserted_id
 
-    # 5) bump updated_at da conversa
     await _conversations().update_one(
         {"_id": oid},
         {"$set": {"updated_at": ai_now}},
     )
 
-    # 6) devolve a resposta da IA (pedido do case)
     return _to_out(ai_doc)

@@ -7,6 +7,7 @@ from app.config import settings
 from app.db import close_mongo, connect_mongo
 from app.routers.conversations import router as conversations_router
 from app.routers.messages import router as messages_router
+from app.routers.ws import router as ws_router
 
 
 @asynccontextmanager
@@ -26,8 +27,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 app.include_router(conversations_router)
 app.include_router(messages_router)
+app.include_router(ws_router)
 
 
 @app.get("/health")

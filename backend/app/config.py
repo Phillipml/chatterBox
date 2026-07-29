@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     mongodb_db: str = "chatterbox"
     cors_origins: str = "http://localhost:5173"
     conversations_collection: str = "conversations"
+    conversation_title_max_len: int = 40
     messages_collection: str = "messages"
     llm_context_limit: int = 20
     groq_api_key: str = ""

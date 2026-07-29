@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     mongodb_db: str = "chatterbox"
     cors_origins: str = "http://localhost:5173"
     conversations_collection: str = "conversations"
+    messages_collection: str = "messages"
+    llm_context_limit: int = 20
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
     groq_base_url: str = "https://api.groq.com/openai/v1"

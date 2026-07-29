@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -21,7 +21,7 @@ def parse_conversation_oid(conversation_id: str) -> ObjectId:
     try:
         return ObjectId(conversation_id)
     except InvalidId:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=404, detail="Conversation not found") from None
 
 
 async def get_conversation_or_404(conversation_id: str) -> ObjectId:
@@ -71,7 +71,7 @@ async def maybe_set_title(conversation_oid: ObjectId, content: str) -> None:
 
 
 async def save_user_message(conversation_oid: ObjectId, content: str) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     doc = {
         "conversation_id": conversation_oid,
         "role": "user",
@@ -98,7 +98,7 @@ async def load_context(conversation_oid: ObjectId) -> list[dict]:
 
 
 async def save_ai_message(conversation_oid: ObjectId, content: str) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     doc = {
         "conversation_id": conversation_oid,
         "role": "ai",

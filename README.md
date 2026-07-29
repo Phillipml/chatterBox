@@ -8,3 +8,13 @@ Chat multi-conversa com IA (persona flat-earth), FastAPI + Mongo + React, stream
 
 ```bash
 cp .env.example .env
+```
+
+## Lint / format (backend)
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+ruff check app --fix
+ruff format app
+```

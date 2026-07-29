@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -27,7 +27,7 @@ def _to_out(doc: dict) -> ConversationOut:
 
 @router.post("", response_model=ConversationOut, status_code=status.HTTP_201_CREATED)
 async def create_conversation(body: ConversationCreate):
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     doc = {
         "title": body.title,
         "created_at": now,
@@ -49,7 +49,7 @@ async def get_conversation(conversation_id: str):
     try:
         oid = ObjectId(conversation_id)
     except InvalidId:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=404, detail="Conversation not found") from None
 
     doc = await _collection().find_one({"_id": oid})
     if doc is None:

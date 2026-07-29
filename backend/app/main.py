@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.db import close_mongo, connect_mongo
+from app.routers.conversations import router as conversations_router
 
 
 @asynccontextmanager
@@ -23,6 +24,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(conversations_router)
 
 
 @app.get("/health")

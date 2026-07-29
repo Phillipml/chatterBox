@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
+import { useChatSocket } from '../hooks/useChatSocket';
 import type { Message } from '../types';
 import { MessageBubble } from './MessageBubble';
 import { MessageInput } from './MessageInput';
@@ -8,30 +9,23 @@ interface Props {
   conversationId: string;
 }
 
+const STREAMING_ID = '__streaming_ai__';
+
 export function ChatWindow({ conversationId }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
-  const [prevId, setPrevId] = useState(conversationId);
+  const [errorLabel, setErrorLabel] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
-
-  if (conversationId !== prevId) {
-    setPrevId(conversationId);
-    setMessages([]);
-    setLoading(true);
-    setSending(false);
-  }
 
   useEffect(() => {
     let cancelled = false;
-
     api.listMessages(conversationId).then((msgs) => {
       if (!cancelled) {
         setMessages(msgs);
         setLoading(false);
       }
     });
-
     return () => {
       cancelled = true;
     };
@@ -41,33 +35,95 @@ export function ChatWindow({ conversationId }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const handleSend = async (content: string) => {
-    const optimistic: Message = {
-      id: `opt-${Date.now()}`,
-      conversation_id: conversationId,
-      role: 'user',
-      content,
-      created_at: new Date().toISOString(),
-    };
-    setMessages((prev) => [...prev, optimistic]);
-    setSending(true);
+  const onUserSaved = useCallback((message: Message) => {
+    setMessages((prev) => {
+      const withoutOpt = prev.filter((m) => !m.id.startsWith('opt-'));
+      return [...withoutOpt, message];
+    });
+  }, []);
 
+  const onAiStart = useCallback(() => {
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: STREAMING_ID,
+        conversation_id: conversationId,
+        role: 'ai',
+        content: '',
+        created_at: new Date().toISOString(),
+      },
+    ]);
+  }, [conversationId]);
+
+  const onAiToken = useCallback((token: string) => {
+    setMessages((prev) =>
+      prev.map((m) =>
+        m.id === STREAMING_ID ? { ...m, content: m.content + token } : m,
+      ),
+    );
+  }, []);
+
+  const onAiDone = useCallback((message: Message) => {
+    setMessages((prev) => [
+      ...prev.filter((m) => m.id !== STREAMING_ID),
+      message,
+    ]);
+    setSending(false);
+  }, []);
+
+  const onError = useCallback((detail: string) => {
+    setErrorLabel(detail);
+    setSending(false);
+  }, []);
+
+  const { status, send } = useChatSocket({
+    conversationId,
+    onUserSaved,
+    onAiStart,
+    onAiToken,
+    onAiDone,
+    onError,
+  });
+
+  const [prevStatus, setPrevStatus] = useState(status);
+  if (status !== prevStatus) {
+    setPrevStatus(status);
+    if (status === 'open') setErrorLabel(null);
+  }
+
+  const statusLabel =
+    status === 'reconnecting' ? 'Reconectando…' : errorLabel;
+
+  const handleSend = async (content: string) => {
+    if (sending) return;
+    setSending(true);
+    setErrorLabel(null);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `opt-${Date.now()}`,
+        conversation_id: conversationId,
+        role: 'user',
+        content,
+        created_at: new Date().toISOString(),
+      },
+    ]);
     try {
-      const aiMsg = await api.sendMessage(conversationId, content);
-      setMessages((prev) => [
-        ...prev.filter((m) => m.id !== optimistic.id),
-        { ...optimistic, id: `confirmed-${Date.now()}` },
-        aiMsg,
-      ]);
+      await send(content);
     } catch {
-      setMessages((prev) => prev.filter((m) => m.id !== optimistic.id));
-    } finally {
+      setMessages((prev) => prev.filter((m) => !m.id.startsWith('opt-')));
       setSending(false);
+      setErrorLabel('Falha ao enviar. Tente de novo.');
     }
   };
 
   return (
     <div className="flex h-full flex-1 flex-col overflow-hidden">
+      {statusLabel && (
+        <p className="border-b border-border bg-secondary px-4 py-2 text-center text-xs text-secondary">
+          {statusLabel}
+        </p>
+      )}
       <div className="flex flex-1 flex-col gap-4 overflow-y-auto px-4 py-6">
         {loading && (
           <p className="text-center text-sm text-secondary">Carregando mensagens…</p>
@@ -80,16 +136,9 @@ export function ChatWindow({ conversationId }: Props) {
         {messages.map((m) => (
           <MessageBubble key={m.id} message={m} />
         ))}
-        {sending && (
-          <div className="flex justify-start">
-            <div className="rounded-2xl rounded-bl-sm border border-border bg-secondary px-4 py-3 text-sm text-secondary">
-              <span className="animate-pulse">digitando…</span>
-            </div>
-          </div>
-        )}
         <div ref={bottomRef} />
       </div>
-      <MessageInput onSend={handleSend} disabled={sending} />
+      <MessageInput onSend={handleSend} sending={sending} />
     </div>
   );
 }

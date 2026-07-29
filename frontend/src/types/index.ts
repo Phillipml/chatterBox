@@ -12,3 +12,15 @@ export interface Message {
   content: string;
   created_at: string;
 }
+
+export type WsClientMessage = {
+  type: 'user_message';
+  content: string;
+};
+
+export type WsServerMessage =
+  | { type: 'user_saved'; message: Message }
+  | { type: 'ai_start' }
+  | { type: 'ai_token'; content: string }
+  | { type: 'ai_done'; message: Message }
+  | { type: 'error'; detail: string };

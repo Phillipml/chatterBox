@@ -2,11 +2,12 @@ from datetime import datetime, timezone
 
 from bson import ObjectId
 from bson.errors import InvalidId
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, Response, status
 
 from app.config import settings
 from app.db import get_db
 from app.schemas.conversation import ConversationCreate, ConversationOut
+from app.services import chat
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
@@ -54,3 +55,9 @@ async def get_conversation(conversation_id: str):
     if doc is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return _to_out(doc)
+
+
+@router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def remove_conversation(conversation_id: str):
+    await chat.delete_conversation(conversation_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

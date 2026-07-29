@@ -15,7 +15,9 @@ export function useConversations() {
     }
   }, []);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+  }, [load]);
 
   const create = useCallback(async (title?: string) => {
     const conv = await api.createConversation(title);

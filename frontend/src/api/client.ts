@@ -10,8 +10,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 }
 
 export const api = {
-  listConversations: () =>
-    request<import('../types').Conversation[]>('/conversations'),
+  listConversations: () => request<import('../types').Conversation[]>('/conversations'),
 
   createConversation: (title?: string) =>
     request<import('../types').Conversation>('/conversations', {
@@ -20,13 +19,11 @@ export const api = {
     }),
 
   listMessages: (conversationId: string) =>
-    request<import('../types').Message[]>(
-      `/conversations/${conversationId}/messages`,
-    ),
+    request<import('../types').Message[]>(`/conversations/${conversationId}/messages`),
 
   sendMessage: (conversationId: string, content: string) =>
-    request<import('../types').Message>(
-      `/conversations/${conversationId}/messages`,
-      { method: 'POST', body: JSON.stringify({ content }) },
-    ),
+    request<import('../types').Message>(`/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    }),
 };

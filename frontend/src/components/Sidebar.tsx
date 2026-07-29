@@ -14,7 +14,9 @@ export function Sidebar({ conversations, loading, activeId, onSelect, onCreate }
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-secondary">
       <div className="flex items-center justify-between border-b border-border px-4 py-4">
-        <span className="font-title text-base font-semibold text-primary">ChatterBox</span>
+        <span className="font-title text-base font-semibold text-primary">
+          ChatterBox
+        </span>
         <button
           onClick={onCreate}
           title="Nova conversa"

@@ -25,5 +25,10 @@ export function useConversations() {
     return conv;
   }, []);
 
-  return { conversations, loading, refresh: load, create };
+  const remove = useCallback(async (id: string) => {
+    await api.deleteConversation(id);
+    setConversations((prev) => prev.filter((c) => c.id !== id));
+  }, []);
+
+  return { conversations, loading, refresh: load, create, remove };
 }

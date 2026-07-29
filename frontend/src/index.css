@@ -1,20 +1,12 @@
 @import 'tailwindcss';
 
 @theme {
-  /* text-primary / text-secondary */
   --text-color-primary: #ffffff;
   --text-color-secondary: #a1a1aa;
-
-  /* bg-primary / bg-secondary */
   --background-color-primary: #09090b;
   --background-color-secondary: #0e0e11;
-
-  /* bg-accent, text-accent, border-accent */
   --color-accent: #0055ff;
-
-  /* border-border, bg-border */
   --color-border: #27272a;
-
   --font-title: 'Space Grotesk', system-ui, sans-serif;
   --font-body: 'Segoe UI', system-ui, sans-serif;
 }

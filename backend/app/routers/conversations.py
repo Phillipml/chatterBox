@@ -4,10 +4,15 @@ from bson import ObjectId
 from bson.errors import InvalidId
 from fastapi import APIRouter, HTTPException, status
 
+from app.config import settings
 from app.db import get_db
 from app.schemas.conversation import ConversationCreate, ConversationOut
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
+
+
+def _collection():
+    return get_db()[settings.conversations_collection]
 
 
 def _to_out(doc: dict) -> ConversationOut:
@@ -27,14 +32,14 @@ async def create_conversation(body: ConversationCreate):
         "created_at": now,
         "updated_at": now,
     }
-    result = await get_db().conversations.insert_one(doc)
+    result = await _collection().insert_one(doc)
     doc["_id"] = result.inserted_id
     return _to_out(doc)
 
 
 @router.get("", response_model=list[ConversationOut])
 async def list_conversations():
-    cursor = get_db().conversations.find().sort("updated_at", -1)
+    cursor = _collection().find().sort("updated_at", -1)
     return [_to_out(doc) async for doc in cursor]
 
 
@@ -45,7 +50,7 @@ async def get_conversation(conversation_id: str):
     except InvalidId:
         raise HTTPException(status_code=404, detail="Conversation not found")
 
-    doc = await get_db().conversations.find_one({"_id": oid})
+    doc = await _collection().find_one({"_id": oid})
     if doc is None:
         raise HTTPException(status_code=404, detail="Conversation not found")
     return _to_out(doc)

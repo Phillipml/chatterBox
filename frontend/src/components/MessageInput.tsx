@@ -46,7 +46,7 @@ export function MessageInput({ onSend, sending }: Props) {
       <button
         onClick={submit}
         disabled={!value.trim() || sending}
-        className={`${value.trim() ? 'cursor-pointer':null} flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary transition-opacity hover:opacity-90 disabled:opacity-40`}
+        className={`${value.trim() ? 'cursor-pointer' : null} flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent text-primary transition-opacity hover:opacity-90 disabled:opacity-40`}
       >
         <IoSend className="size-4" />
       </button>

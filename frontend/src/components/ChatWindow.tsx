@@ -57,17 +57,12 @@ export function ChatWindow({ conversationId }: Props) {
 
   const onAiToken = useCallback((token: string) => {
     setMessages((prev) =>
-      prev.map((m) =>
-        m.id === STREAMING_ID ? { ...m, content: m.content + token } : m,
-      ),
+      prev.map((m) => (m.id === STREAMING_ID ? { ...m, content: m.content + token } : m)),
     );
   }, []);
 
   const onAiDone = useCallback((message: Message) => {
-    setMessages((prev) => [
-      ...prev.filter((m) => m.id !== STREAMING_ID),
-      message,
-    ]);
+    setMessages((prev) => [...prev.filter((m) => m.id !== STREAMING_ID), message]);
     setSending(false);
   }, []);
 
@@ -91,8 +86,7 @@ export function ChatWindow({ conversationId }: Props) {
     if (status === 'open') setErrorLabel(null);
   }
 
-  const statusLabel =
-    status === 'reconnecting' ? 'Reconectando…' : errorLabel;
+  const statusLabel = status === 'reconnecting' ? 'Reconectando…' : errorLabel;
 
   const handleSend = async (content: string) => {
     if (sending) return;

@@ -8,9 +8,17 @@ interface Props {
   activeId: string | null;
   onSelect: (id: string) => void;
   onCreate: () => void;
+  onDelete: (id: string) => void;
 }
 
-export function Sidebar({ conversations, loading, activeId, onSelect, onCreate }: Props) {
+export function Sidebar({
+  conversations,
+  loading,
+  activeId,
+  onSelect,
+  onCreate,
+  onDelete,
+}: Props) {
   return (
     <aside className="flex h-full w-64 shrink-0 flex-col border-r border-border bg-secondary">
       <div className="flex items-center justify-between border-b border-border px-4 py-4">
@@ -37,6 +45,7 @@ export function Sidebar({ conversations, loading, activeId, onSelect, onCreate }
             conversation={c}
             active={c.id === activeId}
             onClick={() => onSelect(c.id)}
+            onDelete={() => onDelete(c.id)}
           />
         ))}
       </nav>

@@ -6,7 +6,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     ...init,
   });
   if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
-  return res.json() as Promise<T>;
+  if (res.status === 204) return undefined as T;
+  const text = await res.text();
+  if (!text) return undefined as T;
+  return JSON.parse(text) as T;
 }
 
 export const api = {
@@ -17,6 +20,9 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ title: title ?? null }),
     }),
+
+  deleteConversation: (conversationId: string) =>
+    request<void>(`/conversations/${conversationId}`, { method: 'DELETE' }),
 
   listMessages: (conversationId: string) =>
     request<import('../types').Message[]>(`/conversations/${conversationId}/messages`),

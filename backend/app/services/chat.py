@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from bson import ObjectId
 from bson.errors import InvalidId
@@ -21,7 +21,7 @@ def parse_conversation_oid(conversation_id: str) -> ObjectId:
     try:
         return ObjectId(conversation_id)
     except InvalidId:
-        raise HTTPException(status_code=404, detail="Conversation not found")
+        raise HTTPException(status_code=404, detail="Conversation not found") from None
 
 
 async def get_conversation_or_404(conversation_id: str) -> ObjectId:
@@ -50,8 +50,28 @@ def to_llm_messages(docs: list[dict]) -> list[dict]:
     return mapped
 
 
+def _title_from_content(content: str) -> str:
+    title = content.strip().replace("\n", " ")
+    max_len = settings.conversation_title_max_len
+    if len(title) > max_len:
+        title = title[:max_len].rstrip() + "…"
+    return title
+
+
+async def maybe_set_title(conversation_oid: ObjectId, content: str) -> None:
+    conv = await conversations().find_one({"_id": conversation_oid})
+    if not conv:
+        return
+    if conv.get("title"):
+        return
+    await conversations().update_one(
+        {"_id": conversation_oid},
+        {"$set": {"title": _title_from_content(content)}},
+    )
+
+
 async def save_user_message(conversation_oid: ObjectId, content: str) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     doc = {
         "conversation_id": conversation_oid,
         "role": "user",
@@ -60,6 +80,7 @@ async def save_user_message(conversation_oid: ObjectId, content: str) -> dict:
     }
     result = await messages().insert_one(doc)
     doc["_id"] = result.inserted_id
+    await maybe_set_title(conversation_oid, content)
     return doc
 
 
@@ -77,7 +98,7 @@ async def load_context(conversation_oid: ObjectId) -> list[dict]:
 
 
 async def save_ai_message(conversation_oid: ObjectId, content: str) -> dict:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     doc = {
         "conversation_id": conversation_oid,
         "role": "ai",
@@ -91,3 +112,9 @@ async def save_ai_message(conversation_oid: ObjectId, content: str) -> dict:
         {"$set": {"updated_at": now}},
     )
     return doc
+
+
+async def delete_conversation(conversation_id: str) -> None:
+    oid = await get_conversation_or_404(conversation_id)
+    await messages().delete_many({"conversation_id": oid})
+    await conversations().delete_one({"_id": oid})

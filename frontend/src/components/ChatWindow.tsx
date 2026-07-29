@@ -7,11 +7,12 @@ import { MessageInput } from './MessageInput';
 
 interface Props {
   conversationId: string;
+  onConversationUpdated?: () => void;
 }
 
 const STREAMING_ID = '__streaming_ai__';
 
-export function ChatWindow({ conversationId }: Props) {
+export function ChatWindow({ conversationId, onConversationUpdated }: Props) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
@@ -35,12 +36,16 @@ export function ChatWindow({ conversationId }: Props) {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const onUserSaved = useCallback((message: Message) => {
-    setMessages((prev) => {
-      const withoutOpt = prev.filter((m) => !m.id.startsWith('opt-'));
-      return [...withoutOpt, message];
-    });
-  }, []);
+  const onUserSaved = useCallback(
+    (message: Message) => {
+      setMessages((prev) => {
+        const withoutOpt = prev.filter((m) => !m.id.startsWith('opt-'));
+        return [...withoutOpt, message];
+      });
+      onConversationUpdated?.();
+    },
+    [onConversationUpdated],
+  );
 
   const onAiStart = useCallback(() => {
     setMessages((prev) => [

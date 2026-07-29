@@ -12,4 +12,22 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: './src/test/setup.ts',
+    css: false,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'html'],
+      include: ['src/**/*.{ts,tsx}'],
+      exclude: ['src/main.tsx', 'src/types/**', 'src/test/**', '**/*.d.ts'],
+      thresholds: {
+        lines: 95,
+        functions: 95,
+        statements: 95,
+        branches: 85,
+      },
+    },
+  },
 });

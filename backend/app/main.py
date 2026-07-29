@@ -27,8 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(conversations_router)
-app.include_router(messages_router)
+
 app.include_router(conversations_router)
 app.include_router(messages_router)
 app.include_router(ws_router)

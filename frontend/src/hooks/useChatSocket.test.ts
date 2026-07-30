@@ -69,9 +69,7 @@ describe('useChatSocket', () => {
 
   it('conecta e despacha eventos ws', async () => {
     const h = handlers();
-    const { result } = renderHook(() =>
-      useChatSocket({ conversationId: 'c1', ...h }),
-    );
+    const { result } = renderHook(() => useChatSocket({ conversationId: 'c1', ...h }));
     await waitFor(() => expect(result.current.status).toBe('open'));
     const ws = MockWebSocket.instances[0];
     act(() => {
@@ -109,9 +107,7 @@ describe('useChatSocket', () => {
 
   it('send usa websocket quando aberto', async () => {
     const h = handlers();
-    const { result } = renderHook(() =>
-      useChatSocket({ conversationId: 'c1', ...h }),
-    );
+    const { result } = renderHook(() => useChatSocket({ conversationId: 'c1', ...h }));
     await waitFor(() => expect(result.current.status).toBe('open'));
     await act(async () => {
       await result.current.send('hello');
@@ -128,9 +124,7 @@ describe('useChatSocket', () => {
       content: 'resp',
       created_at: '',
     });
-    const { result } = renderHook(() =>
-      useChatSocket({ conversationId: 'c1', ...h }),
-    );
+    const { result } = renderHook(() => useChatSocket({ conversationId: 'c1', ...h }));
     await waitFor(() => expect(result.current.status).toBe('open'));
     act(() => {
       MockWebSocket.instances[0].readyState = 3;
@@ -172,9 +166,7 @@ describe('useChatSocket', () => {
 
     vi.stubGlobal('WebSocket', FlakyWebSocket);
     const h = handlers();
-    const { result } = renderHook(() =>
-      useChatSocket({ conversationId: 'c1', ...h }),
-    );
+    const { result } = renderHook(() => useChatSocket({ conversationId: 'c1', ...h }));
 
     for (let i = 0; i < 5; i++) {
       await act(async () => {

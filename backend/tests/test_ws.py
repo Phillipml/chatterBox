@@ -67,6 +67,30 @@ def test_ws_empty_content(ws_client):
         assert data["detail"] == "content is required"
 
 
+def test_ws_empty_ai_response(ws_client):
+    created = ws_client.post("/conversations", json={})
+    cid = created.json()["id"]
+
+    async def empty_stream(_messages):
+        if False:
+            yield ""
+
+    with (
+        patch("app.routers.ws.llm.stream_chat", empty_stream),
+        ws_client.websocket_connect(f"/ws/conversations/{cid}") as ws,
+    ):
+        ws.send_text('{"type":"user_message","content":"oi"}')
+        events = []
+        while True:
+            data = ws.receive_json()
+            events.append(data)
+            if data.get("type") == "error":
+                break
+
+    assert events[-1]["type"] == "error"
+    assert "vazia" in events[-1]["detail"].lower()
+
+
 def test_ws_handler_error(ws_client):
     created = ws_client.post("/conversations", json={})
     cid = created.json()["id"]

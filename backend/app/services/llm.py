@@ -1,6 +1,6 @@
 from collections.abc import AsyncIterator
 
-from openai import AsyncOpenAI
+from openai import APIError, AsyncOpenAI
 
 from app.config import settings
 
@@ -25,28 +25,50 @@ _client = AsyncOpenAI(
 )
 
 
+class LlmError(Exception):
+    pass
+
+
 def _with_system(messages: list[dict]) -> list[dict]:
     return [{"role": "system", "content": SYSTEM_PROMPT}, *messages]
 
 
+def _wrap_api_error(exc: Exception) -> LlmError:
+    if isinstance(exc, APIError):
+        detail = exc.message or str(exc)
+        return LlmError(f"Erro no Groq: {detail}")
+    return LlmError(f"Erro no Groq: {exc}")
+
+
 async def chat(messages: list[dict]) -> str:
-    response = await _client.chat.completions.create(
-        model=settings.groq_model,
-        messages=_with_system(messages),
-        temperature=0.7,
-    )
+    try:
+        response = await _client.chat.completions.create(
+            model=settings.groq_model,
+            messages=_with_system(messages),
+            temperature=0.7,
+        )
+    except Exception as exc:
+        raise _wrap_api_error(exc) from exc
+
     content = response.choices[0].message.content
-    return content or ""
+    if not (content and content.strip()):
+        raise LlmError("Resposta vazia do modelo.")
+    return content
 
 
 async def stream_chat(messages: list[dict]) -> AsyncIterator[str]:
-    stream = await _client.chat.completions.create(
-        model=settings.groq_model,
-        messages=_with_system(messages),
-        temperature=0.7,
-        stream=True,
-    )
-    async for chunk in stream:
-        delta = chunk.choices[0].delta.content
-        if delta:
-            yield delta
+    try:
+        stream = await _client.chat.completions.create(
+            model=settings.groq_model,
+            messages=_with_system(messages),
+            temperature=0.7,
+            stream=True,
+        )
+        async for chunk in stream:
+            delta = chunk.choices[0].delta.content
+            if delta:
+                yield delta
+    except LlmError:
+        raise
+    except Exception as exc:
+        raise _wrap_api_error(exc) from exc

@@ -1,5 +1,7 @@
 from unittest.mock import AsyncMock, patch
 
+from app.services import llm
+
 
 async def test_list_messages_empty(client):
     created = await client.post("/conversations", json={})
@@ -60,6 +62,23 @@ async def test_create_message_keeps_existing_title(client):
 
     conv = (await client.get(f"/conversations/{cid}")).json()
     assert conv["title"] == "Fixo"
+
+
+async def test_create_message_llm_error(client):
+    created = await client.post("/conversations", json={})
+    cid = created.json()["id"]
+
+    with patch(
+        "app.routers.messages.llm.chat",
+        new=AsyncMock(side_effect=llm.LlmError("Erro no Groq: boom")),
+    ):
+        r = await client.post(
+            f"/conversations/{cid}/messages",
+            json={"content": "oi"},
+        )
+
+    assert r.status_code == 502
+    assert "boom" in r.json()["detail"]
 
 
 async def test_create_message_invalid_conversation(client):

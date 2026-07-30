@@ -18,6 +18,12 @@ export function ChatWindow({ conversationId, onConversationUpdated }: Props) {
   const [sending, setSending] = useState(false);
   const [errorLabel, setErrorLabel] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const sendingRef = useRef(false);
+
+  const setSendingBoth = (value: boolean) => {
+    sendingRef.current = value;
+    setSending(value);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -68,13 +74,31 @@ export function ChatWindow({ conversationId, onConversationUpdated }: Props) {
 
   const onAiDone = useCallback((message: Message) => {
     setMessages((prev) => [...prev.filter((m) => m.id !== STREAMING_ID), message]);
-    setSending(false);
+    setSendingBoth(false);
   }, []);
 
-  const onError = useCallback((detail: string) => {
-    setErrorLabel(detail);
-    setSending(false);
-  }, []);
+  const onError = useCallback(
+    (detail: string) => {
+      if (sendingRef.current) {
+        setMessages((prev) => {
+          const errMsg: Message = {
+            id: `err-${Date.now()}`,
+            conversation_id: conversationId,
+            role: 'ai',
+            content: detail,
+            created_at: new Date().toISOString(),
+          };
+          const withoutStreaming = prev.filter((m) => m.id !== STREAMING_ID);
+          return [...withoutStreaming, errMsg];
+        });
+        setSendingBoth(false);
+        return;
+      }
+      setErrorLabel(detail);
+      setSendingBoth(false);
+    },
+    [conversationId],
+  );
 
   const { status, send } = useChatSocket({
     conversationId,
@@ -95,7 +119,7 @@ export function ChatWindow({ conversationId, onConversationUpdated }: Props) {
 
   const handleSend = async (content: string) => {
     if (sending) return;
-    setSending(true);
+    setSendingBoth(true);
     setErrorLabel(null);
     setMessages((prev) => [
       ...prev,
@@ -109,10 +133,29 @@ export function ChatWindow({ conversationId, onConversationUpdated }: Props) {
     ]);
     try {
       await send(content);
-    } catch {
-      setMessages((prev) => prev.filter((m) => !m.id.startsWith('opt-')));
-      setSending(false);
-      setErrorLabel('Falha ao enviar. Tente de novo.');
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : 'Falha ao enviar. Tente de novo.';
+      setMessages((prev) => {
+        const withoutOpt = prev.filter((m) => !m.id.startsWith('opt-'));
+        return [
+          ...withoutOpt,
+          {
+            id: `opt-${Date.now()}`,
+            conversation_id: conversationId,
+            role: 'user',
+            content,
+            created_at: new Date().toISOString(),
+          },
+          {
+            id: `err-${Date.now()}`,
+            conversation_id: conversationId,
+            role: 'ai',
+            content: detail,
+            created_at: new Date().toISOString(),
+          },
+        ];
+      });
+      setSendingBoth(false);
     }
   };
 

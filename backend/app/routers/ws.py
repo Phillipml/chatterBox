@@ -55,8 +55,13 @@ async def conversation_ws(websocket: WebSocket, conversation_id: str):
                     await websocket.send_json({"type": "ai_token", "content": token})
 
                 ai_text = "".join(pieces)
+                if not ai_text.strip():
+                    raise llm.LlmError("Resposta vazia do modelo.")
+
                 ai_doc = await chat.save_ai_message(oid, ai_text)
                 await websocket.send_json({"type": "ai_done", "message": _msg_payload(ai_doc)})
+            except llm.LlmError as exc:
+                await websocket.send_json({"type": "error", "detail": str(exc)})
             except Exception as exc:
                 await websocket.send_json({"type": "error", "detail": str(exc)})
     except WebSocketDisconnect:

@@ -114,15 +114,27 @@ export function useChatSocket({
         ws.send(JSON.stringify({ type: 'user_message', content }));
         return;
       }
-      const aiMsg = await api.sendMessage(conversationId, content);
-      handlers.current.onUserSaved({
-        id: `rest-user-${Date.now()}`,
-        conversation_id: conversationId,
-        role: 'user',
-        content,
-        created_at: new Date().toISOString(),
-      });
-      handlers.current.onAiDone(aiMsg);
+      try {
+        const aiMsg = await api.sendMessage(conversationId, content);
+        handlers.current.onUserSaved({
+          id: `rest-user-${Date.now()}`,
+          conversation_id: conversationId,
+          role: 'user',
+          content,
+          created_at: new Date().toISOString(),
+        });
+        handlers.current.onAiDone(aiMsg);
+      } catch (err) {
+        const detail = err instanceof Error ? err.message : 'Falha ao enviar. Tente de novo.';
+        handlers.current.onUserSaved({
+          id: `rest-user-${Date.now()}`,
+          conversation_id: conversationId,
+          role: 'user',
+          content,
+          created_at: new Date().toISOString(),
+        });
+        handlers.current.onError(detail);
+      }
     },
     [conversationId],
   );

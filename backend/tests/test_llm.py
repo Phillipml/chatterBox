@@ -1,6 +1,8 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from app.services import llm
 
 
@@ -17,14 +19,25 @@ async def test_chat_returns_content():
     assert kwargs["messages"][1]["content"] == "oi"
 
 
-async def test_chat_returns_empty_when_none():
+async def test_chat_raises_when_none():
     response = SimpleNamespace(choices=[SimpleNamespace(message=SimpleNamespace(content=None))])
     with patch.object(
         llm._client.chat.completions,
         "create",
         AsyncMock(return_value=response),
     ):
-        assert await llm.chat([]) == ""
+        with pytest.raises(llm.LlmError, match="Resposta vazia"):
+            await llm.chat([])
+
+
+async def test_chat_raises_on_api_error():
+    with patch.object(
+        llm._client.chat.completions,
+        "create",
+        AsyncMock(side_effect=RuntimeError("timeout")),
+    ):
+        with pytest.raises(llm.LlmError, match="timeout"):
+            await llm.chat([{"role": "user", "content": "oi"}])
 
 
 async def test_stream_chat_yields_tokens():

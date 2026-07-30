@@ -5,7 +5,15 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
     headers: { 'Content-Type': 'application/json', ...init?.headers },
     ...init,
   });
-  if (!res.ok) throw new Error(`API ${res.status}: ${path}`);
+  if (!res.ok) {
+    let detail = `API ${res.status}: ${path}`;
+    try {
+      const body = (await res.json()) as { detail?: string };
+      if (typeof body.detail === 'string' && body.detail) detail = body.detail;
+    } catch {
+    }
+    throw new Error(detail);
+  }
   if (res.status === 204) return undefined as T;
   const text = await res.text();
   if (!text) return undefined as T;

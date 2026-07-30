@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, HTTPException, status
 
 from app.schemas.message import MessageCreate, MessageOut
 from app.services import chat, llm
@@ -21,6 +21,9 @@ async def create_message(conversation_id: str, body: MessageCreate):
     oid = await chat.get_conversation_or_404(conversation_id)
     await chat.save_user_message(oid, body.content)
     history = await chat.load_context(oid)
-    ai_text = await llm.chat(chat.to_llm_messages(history))
+    try:
+        ai_text = await llm.chat(chat.to_llm_messages(history))
+    except llm.LlmError as exc:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc)) from exc
     ai_doc = await chat.save_ai_message(oid, ai_text)
     return chat.message_to_out(ai_doc)

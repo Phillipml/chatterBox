@@ -18,3 +18,21 @@ pip install -r requirements-dev.txt
 ruff check app --fix
 ruff format app
 ```
+
+## Testes
+
+Backend (Mongo local na porta 27017):
+
+```bash
+cd backend
+pip install -r requirements-dev.txt
+pytest --cov=app --cov-fail-under=95
+```
+
+Frontend:
+
+```bash
+cd frontend
+npm test
+npm run test:coverage
+```

@@ -21,7 +21,7 @@ def parse_conversation_oid(conversation_id: str) -> ObjectId:
     try:
         return ObjectId(conversation_id)
     except InvalidId:
-        raise HTTPException(status_code=404, detail="Conversation not found") from None
+        raise HTTPException(status_code=400, detail="Invalid conversation id") from None
 
 
 async def get_conversation_or_404(conversation_id: str) -> ObjectId:
@@ -43,11 +43,7 @@ def message_to_out(doc: dict) -> MessageOut:
 
 
 def to_llm_messages(docs: list[dict]) -> list[dict]:
-    mapped = []
-    for doc in docs:
-        role = "assistant" if doc["role"] == "ai" else "user"
-        mapped.append({"role": role, "content": doc["content"]})
-    return mapped
+    return [{"role": doc["role"], "content": doc["content"]} for doc in docs]
 
 
 def _title_from_content(content: str) -> str:
@@ -101,7 +97,7 @@ async def save_ai_message(conversation_oid: ObjectId, content: str) -> dict:
     now = datetime.now(UTC)
     doc = {
         "conversation_id": conversation_oid,
-        "role": "ai",
+        "role": "assistant",
         "content": content,
         "created_at": now,
     }

@@ -59,7 +59,7 @@ export function ChatWindow({ conversationId, onConversationUpdated }: Props) {
       {
         id: STREAMING_ID,
         conversation_id: conversationId,
-        role: 'ai',
+        role: 'assistant',
         content: '',
         created_at: new Date().toISOString(),
       },
@@ -84,7 +84,7 @@ export function ChatWindow({ conversationId, onConversationUpdated }: Props) {
           const errMsg: Message = {
             id: `err-${Date.now()}`,
             conversation_id: conversationId,
-            role: 'ai',
+            role: 'assistant',
             content: detail,
             created_at: new Date().toISOString(),
           };
@@ -149,7 +149,7 @@ export function ChatWindow({ conversationId, onConversationUpdated }: Props) {
           {
             id: `err-${Date.now()}`,
             conversation_id: conversationId,
-            role: 'ai',
+            role: 'assistant',
             content: detail,
             created_at: new Date().toISOString(),
           },

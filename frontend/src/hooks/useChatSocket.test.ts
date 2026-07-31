@@ -90,7 +90,7 @@ describe('useChatSocket', () => {
         message: {
           id: '2',
           conversation_id: 'c1',
-          role: 'ai',
+          role: 'assistant',
           content: 'x',
           created_at: '',
         },
@@ -120,7 +120,7 @@ describe('useChatSocket', () => {
     vi.mocked(api.sendMessage).mockResolvedValue({
       id: 'ai',
       conversation_id: 'c1',
-      role: 'ai',
+      role: 'assistant',
       content: 'resp',
       created_at: '',
     });

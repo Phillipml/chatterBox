@@ -19,10 +19,10 @@ def test_message_to_out():
     assert out.content == "oi"
 
 
-def test_to_llm_messages_maps_roles():
+def test_to_llm_messages_passes_roles():
     docs = [
         {"role": "user", "content": "u"},
-        {"role": "ai", "content": "a"},
+        {"role": "assistant", "content": "a"},
     ]
     mapped = to_llm_messages(docs)
     assert mapped == [

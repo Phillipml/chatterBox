@@ -17,7 +17,7 @@ describe('MessageBubble', () => {
 
   it('renderiza mensagem da ia com icone', () => {
     const { container } = render(
-      <MessageBubble message={{ ...base, role: 'ai', content: 'Terra plana' }} />,
+      <MessageBubble message={{ ...base, role: 'assistant', content: 'Terra plana' }} />,
     );
     expect(screen.getByText('Terra plana')).toBeInTheDocument();
     expect(container.querySelector('svg')).toBeTruthy();

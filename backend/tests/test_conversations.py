@@ -32,7 +32,8 @@ async def test_get_conversation(client):
 
 async def test_get_conversation_invalid_id(client):
     r = await client.get("/conversations/not-an-objectid")
-    assert r.status_code == 404
+    assert r.status_code == 400
+    assert r.json()["detail"] == "Invalid conversation id"
 
 
 async def test_get_conversation_missing(client):
@@ -51,3 +52,8 @@ async def test_delete_conversation(client):
 async def test_delete_conversation_not_found(client):
     r = await client.delete("/conversations/000000000000000000000000")
     assert r.status_code == 404
+
+
+async def test_delete_conversation_invalid_id(client):
+    r = await client.delete("/conversations/not-an-objectid")
+    assert r.status_code == 400

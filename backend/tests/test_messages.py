@@ -16,6 +16,12 @@ async def test_list_messages_not_found(client):
     assert r.status_code == 404
 
 
+async def test_list_messages_invalid_id(client):
+    r = await client.get("/conversations/not-an-objectid/messages")
+    assert r.status_code == 400
+    assert r.json()["detail"] == "Invalid conversation id"
+
+
 async def test_create_message_saves_user_and_ai(client):
     created = await client.post("/conversations", json={})
     cid = created.json()["id"]
@@ -28,13 +34,13 @@ async def test_create_message_saves_user_and_ai(client):
 
     assert r.status_code == 201
     body = r.json()
-    assert body["role"] == "ai"
+    assert body["role"] == "assistant"
     assert body["content"] == "Terra plana."
 
     msgs = (await client.get(f"/conversations/{cid}/messages")).json()
     assert len(msgs) == 2
     assert msgs[0]["role"] == "user"
-    assert msgs[1]["role"] == "ai"
+    assert msgs[1]["role"] == "assistant"
 
     conv = (await client.get(f"/conversations/{cid}")).json()
     assert conv["title"] == "Por que a Terra é plana?"
@@ -87,4 +93,5 @@ async def test_create_message_invalid_conversation(client):
             "/conversations/bad-id/messages",
             json={"content": "oi"},
         )
-    assert r.status_code == 404
+    assert r.status_code == 400
+    assert r.json()["detail"] == "Invalid conversation id"

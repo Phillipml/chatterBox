@@ -11,6 +11,6 @@ class MessageCreate(BaseModel):
 class MessageOut(BaseModel):
     id: str
     conversation_id: str
-    role: Literal["user", "ai"]
+    role: Literal["user", "assistant"]
     content: str
     created_at: datetime

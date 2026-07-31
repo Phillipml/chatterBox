@@ -8,7 +8,7 @@ export interface Conversation {
 export interface Message {
   id: string;
   conversation_id: string;
-  role: 'user' | 'ai';
+  role: 'user' | 'assistant';
   content: string;
   created_at: string;
 }

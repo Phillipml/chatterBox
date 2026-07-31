@@ -37,7 +37,7 @@ def test_ws_invalid_conversation(ws_client):
     with ws_client.websocket_connect("/ws/conversations/not-valid") as ws:
         data = ws.receive_json()
         assert data["type"] == "error"
-        assert data["detail"] == "Conversation not found"
+        assert data["detail"] == "Invalid conversation id"
 
 
 def test_ws_invalid_json(ws_client):

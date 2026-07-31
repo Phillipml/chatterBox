@@ -71,9 +71,7 @@ describe('ChatWindow', () => {
     );
     await user.type(screen.getByPlaceholderText('Mensagem…'), 'x');
     await user.click(screen.getByRole('button'));
-    await waitFor(() =>
-      expect(screen.getByText('Falha ao enviar. Tente de novo.')).toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.getByText('fail')).toBeInTheDocument());
   });
 
   it('reage aos callbacks do socket', async () => {
@@ -109,7 +107,7 @@ describe('ChatWindow', () => {
     opts!.onAiDone({
       id: 'a1',
       conversation_id: 'c1',
-      role: 'ai',
+      role: 'assistant',
       content: 'final',
       created_at: '',
     });

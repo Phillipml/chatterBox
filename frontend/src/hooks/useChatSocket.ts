@@ -3,7 +3,18 @@ import { api } from '../api/client';
 import type { Message, WsServerMessage } from '../types';
 
 const WS_BASE = import.meta.env.VITE_WS_URL ?? 'ws://localhost:8000';
-const DELAYS = [1000, 2000, 5000];
+const DEFAULT_DELAYS = [1000, 2000, 5000];
+
+function parseReconnectDelays(raw: string | undefined): number[] {
+  if (!raw?.trim()) return DEFAULT_DELAYS;
+  const delays = raw
+    .split(',')
+    .map((s) => Number(s.trim()))
+    .filter((n) => Number.isFinite(n) && n >= 0);
+  return delays.length > 0 ? delays : DEFAULT_DELAYS;
+}
+
+const DELAYS = parseReconnectDelays(import.meta.env.VITE_WS_RECONNECT_DELAYS as string | undefined);
 
 type Status = 'connecting' | 'open' | 'reconnecting' | 'closed';
 

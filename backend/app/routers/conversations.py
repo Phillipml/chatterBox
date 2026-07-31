@@ -1,7 +1,5 @@
 from datetime import UTC, datetime
 
-from bson import ObjectId
-from bson.errors import InvalidId
 from fastapi import APIRouter, HTTPException, Response, status
 
 from app.config import settings
@@ -46,11 +44,7 @@ async def list_conversations():
 
 @router.get("/{conversation_id}", response_model=ConversationOut)
 async def get_conversation(conversation_id: str):
-    try:
-        oid = ObjectId(conversation_id)
-    except InvalidId:
-        raise HTTPException(status_code=404, detail="Conversation not found") from None
-
+    oid = chat.parse_conversation_oid(conversation_id)
     doc = await _collection().find_one({"_id": oid})
     if doc is None:
         raise HTTPException(status_code=404, detail="Conversation not found")

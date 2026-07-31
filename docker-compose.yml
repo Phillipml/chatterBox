@@ -35,6 +35,7 @@ services:
       args:
         VITE_API_URL: http://localhost:8000
         VITE_WS_URL: ws://localhost:8000
+        VITE_WS_RECONNECT_DELAYS: 1000,2000,5000
     container_name: chatterbox-web
     ports:
       - "5173:80"

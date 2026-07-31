@@ -73,6 +73,9 @@ export function useChatSocket({
           case 'error':
             h.onError(data.detail);
             break;
+          default:
+            h.onError('Evento desconhecido');
+            break;
         }
       };
 
@@ -125,7 +128,8 @@ export function useChatSocket({
         });
         handlers.current.onAiDone(aiMsg);
       } catch (err) {
-        const detail = err instanceof Error ? err.message : 'Falha ao enviar. Tente de novo.';
+        const detail =
+          err instanceof Error ? err.message : 'Falha ao enviar. Tente de novo.';
         handlers.current.onUserSaved({
           id: `rest-user-${Date.now()}`,
           conversation_id: conversationId,
